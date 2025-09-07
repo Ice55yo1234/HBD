@@ -268,7 +268,7 @@
                 const bufferLength = analyser.frequencyBinCount;
                 const dataArray = new Uint8Array(bufferLength);
                 
-                const blowThreshold = 100;
+                const blowThreshold = 50;
                 
                 function detectSound() {
                     analyser.getByteFrequencyData(dataArray);
