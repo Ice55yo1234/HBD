@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เค้กวันเกิด</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fce4ec;
+            background-image: radial-gradient(circle, #ffebee, #f8bbd0);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1rem;
+        }
+
+        .cake-container {
+            position: relative;
+            cursor: default;
+            filter: drop-shadow(0 15px 15px rgba(0, 0, 0, 0.15));
+        }
+
+        .cake-svg {
+            width: 350px;
+            height: auto;
+            max-width: 90vw;
+        }
+
+        .candle {
+            position: absolute;
+            top: 50px;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none;
+        }
+
+        .candle-body {
+            width: 12px;
+            height: 55px;
+            border-radius: 6px;
+            position: relative;
+            box-shadow: inset 0 -3px 5px rgba(0,0,0,0.1);
+        }
+
+        .flame {
+            width: 12px;
+            height: 25px;
+            position: relative;
+            filter: drop-shadow(0 0 8px #ffcc33);
+            animation: flame-dance 2s infinite ease-in-out;
+        }
+        
+        .flame-inner {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #ffcc33 10%, #ff9900 60%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: flicker 0.2s infinite alternate;
+        }
+
+        .flame-outer {
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(255, 204, 51, 0.8) 10%, rgba(255, 153, 0, 0) 60%);
+            border-radius: 50%;
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            animation: flame-pulse 2s infinite ease-in-out;
+            transform-origin: center bottom;
+        }
+
+        .flame-extinguished {
+            display: none;
+        }
+
+        @keyframes flicker {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        @keyframes flame-dance {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(2px); }
+            50% { transform: translateX(-2px); }
+            75% { transform: translateX(1px); }
+        }
+
+        @keyframes flame-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 1.5rem 3rem;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        @media (max-width: 768px) {
+            .cake-svg {
+                width: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="message-box" id="messageBox"></div>
+
+    <div class="container" id="cakeSection">
+        <h1 class="text-4xl md:text-5xl font-bold text-center text-pink-600 mb-6 drop-shadow-lg">สุขสันต์วันเกิด!</h1>
+        <p class="text-lg text-gray-700 mb-8 text-center" id="instructions">
+            เป่าเทียนเพื่อดับไฟ
+        </p>
+
+        <div class="cake-container" id="cakeContainer">
+            <svg class="cake-svg" viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg">
+                <!-- Cake base and shadow -->
+                <defs>
+                    <filter id="dropshadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feOffset result="offOut" in="SourceAlpha" dx="0" dy="10" />
+                        <feGaussianBlur result="blurOut" in="offOut" stdDeviation="8" />
+                        <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+                    </filter>
+                    <linearGradient id="pinkGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#f06292" />
+                        <stop offset="100%" stop-color="#ec407a" />
+                    </linearGradient>
+                    <linearGradient id="lightPinkGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#f8bbd0" />
+                        <stop offset="100%" stop-color="#f48fb1" />
+                    </linearGradient>
+                </defs>
+
+                <!-- Plate -->
+                <ellipse cx="175" cy="305" rx="140" ry="20" fill="#dedede" filter="url(#dropshadow)" />
+                <ellipse cx="175" cy="300" rx="140" ry="20" fill="#f0f0f0" />
+
+                <!-- Bottom Cake Layer (Pink) -->
+                <path d="M 50 200 C 50 280, 300 280, 300 200 L 300 300 C 300 380, 50 380, 50 300 Z" fill="url(#pinkGradient)" />
+                <path d="M 50 200 Q 175 220, 300 200 Z" fill="url(#lightPinkGradient)" />
+                
+                <!-- Dripping Frosting for Bottom Layer (White) -->
+                <path d="M 50 200 C 60 215, 80 210, 95 215 C 110 220, 130 210, 145 215 C 160 220, 180 210, 195 215 C 210 220, 230 210, 245 215 C 260 220, 280 210, 300 200 Z" fill="#fdf0e2" />
+
+                <!-- Top Cake Layer (Light Pink) -->
+                <path d="M 70 120 C 70 180, 280 180, 280 120 L 280 200 C 280 260, 70 260, 70 200 Z" fill="url(#lightPinkGradient)" />
+                <path d="M 70 120 Q 175 140, 280 120 Z" fill="#fce4ec" />
+
+                <!-- Dripping Frosting for Top Layer (White) -->
+                <path d="M 70 120 C 80 135, 100 130, 115 135 C 130 140, 150 130, 165 135 C 180 140, 200 130, 215 135 C 230 140, 250 130, 280 120 Z" fill="#fdf0e2" />
+                <ellipse cx="175" cy="120" rx="105" ry="8" fill="#fdf0e2" />
+
+                <!-- Top Frosting (White) -->
+                <ellipse cx="175" cy="115" rx="105" ry="8" fill="#fdf0e2" />
+            </svg>
+
+            <!-- Pre-placed Candles -->
+            <div class="candle" style="left: calc(50% - 70px);">
+                <div class="flame"><div class="flame-outer"></div><div class="flame-inner"></div></div>
+                <div class="candle-body" style="background-color: #f59e0b;"></div>
+            </div>
+            <div class="candle" style="left: calc(50% - 35px);">
+                <div class="flame"><div class="flame-outer"></div><div class="flame-inner"></div></div>
+                <div class="candle-body" style="background-color: #f97316;"></div>
+            </div>
+            <div class="candle" style="left: calc(50%);">
+                <div class="flame"><div class="flame-outer"></div><div class="flame-inner"></div></div>
+                <div class="candle-body" style="background-color: #ef4444;"></div>
+            </div>
+            <div class="candle" style="left: calc(50% + 35px);">
+                <div class="flame"><div class="flame-outer"></div><div class="flame-inner"></div></div>
+                <div class="candle-body" style="background-color: #f472b6;"></div>
+            </div>
+            <div class="candle" style="left: calc(50% + 70px);">
+                <div class="flame"><div class="flame-outer"></div><div class="flame-inner"></div></div>
+                <div class="candle-body" style="background-color: #a855f7;"></div>
+            </div>
+        </div>
+
+        <button id="blowButton" class="mt-8 px-8 py-4 bg-pink-500 text-white font-semibold rounded-full shadow-lg hover:bg-pink-600 transition-all transform hover:scale-105 active:scale-95">
+            เป่าเทียน
+        </button>
+    </div>
+
+    <!-- Message section - initially hidden -->
+    <div id="messageSection" class="hidden container">
+        <h2 class="text-4xl md:text-5xl font-bold text-center text-pink-600 mb-6 drop-shadow-lg">คำอวยพร</h2>
+        <div class="w-full max-w-lg p-6 rounded-lg bg-white border-2 border-gray-300 shadow-md text-gray-700 text-center text-lg leading-relaxed">
+            <p>สุขสันต์วันเกิดนะ 😊🎉</p>
+            <p class="mt-4">วันนี้ขอให้คุณมีแต่รอยยิ้มและความสุขเต็มวัน เต็มปี เต็มไปด้วยเรื่องดี ๆ ที่ทำให้หัวใจคุณเบิกบานเหมือนที่คุณทำให้คนรอบข้างมีความสุขเสมอ 😌</p>
+            <p class="mt-4">ขอให้ทุกการเรียน การทำงาน และทุกเรื่องที่ตั้งใจประสบความสำเร็จได้ดั่งฝัน 💛</p>
+            <p class="mt-4">และก็…หวังว่าปีนี้ผมจะมีโอกาสได้อยู่ใกล้คุณ เห็นรอยยิ้มของคุณบ่อย ๆ และเป็นกำลังใจให้คุณในทุกเรื่องนะ 😄</p>
+            <p class="mt-4">สุขสันต์วันเกิดอีกครั้งครับ🎂💫</p>
+        </div>
+    </div>
+
+    <script>
+        const cakeSection = document.getElementById('cakeSection');
+        const messageSection = document.getElementById('messageSection');
+        const blowButton = document.getElementById('blowButton');
+        const messageBox = document.getElementById('messageBox');
+        const instructions = document.getElementById('instructions');
+        
+        let candleCount = 5;
+        let isBlowing = false;
+        
+        let audioContext;
+        let analyser;
+        let microphone;
+
+        function showMessage(message) {
+            messageBox.textContent = message;
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 2000);
+        }
+
+        async function startMicrophone() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                const blowThreshold = 50;
+                
+                function detectSound() {
+                    analyser.getByteFrequencyData(dataArray);
+                    const average = dataArray.reduce((sum, value) => sum + value, 0) / bufferLength;
+
+                    if (average > blowThreshold && !isBlowing && candleCount > 0) {
+                        blowOutCandles();
+                    }
+                    requestAnimationFrame(detectSound);
+                }
+                
+                detectSound();
+                showMessage("กำลังรอเสียงเป่าจากคุณ...");
+                instructions.textContent = "เป่าเทียนเพื่อดับไฟ";
+                blowButton.classList.add('hidden'); // ซ่อนปุ่มเมื่อไมค์ทำงานได้
+            } catch (err) {
+                console.error('Error accessing microphone: ', err);
+                showMessage("ไม่สามารถเข้าถึงไมโครโฟนได้ กรุณาใช้ปุ่มเป่าเทียน");
+                instructions.textContent = "กดปุ่มเพื่อดับเทียน";
+                blowButton.classList.remove('hidden'); // แสดงปุ่มเมื่อไมค์ใช้ไม่ได้
+                blowButton.textContent = 'เป่าเทียนด้วยตนเอง';
+            }
+        }
+        
+        function blowOutCandles() {
+            if (candleCount === 0) {
+                showMessage("เทียนดับหมดแล้ว!");
+                return;
+            }
+
+            isBlowing = true;
+            blowButton.disabled = true;
+
+            const candles = document.querySelectorAll('.candle');
+            candles.forEach((candle, index) => {
+                setTimeout(() => {
+                    const flame = candle.querySelector('.flame');
+                    if (flame) {
+                        flame.classList.add('flame-extinguished');
+                    }
+                }, index * 300);
+            });
+
+            setTimeout(() => {
+                showMessage("สุขสันต์วันเกิด! 🎂");
+                isBlowing = false;
+                candleCount = 0;
+                candles.forEach(candle => candle.remove());
+                blowButton.disabled = true;
+                
+                // Transition to the message section
+                cakeSection.classList.add('hidden');
+                messageSection.classList.remove('hidden');
+
+            }, candles.length * 300 + 1000);
+        }
+
+        blowButton.addEventListener('click', blowOutCandles);
+        
+        window.onload = startMicrophone;
+    </script>
+</body>
+</html>

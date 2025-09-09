@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Shooter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Pacifico" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Marck+Script&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        :root {
+            --primary-red: #e90909;
+        }
+
+        @keyframes shootStraight {
+            0% {
+                transform: translate(0, 0) scale(0.3);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .heart-bullet {
+            animation: shootStraight 1.2s ease-out forwards;
+            position: fixed;
+            z-index: 10;
+        }
+
+        .heart-bullet svg {
+            filter: drop-shadow(0 0 10px color-mix(in srgb, var(--primary-red) 70%, rgb(3, 3, 3) 10%));
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+            z-index: 2;
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.1;
+            }
+            50% {
+                opacity: 0.4;
+            }
+            100% {
+                opacity: 0.1;
+            }
+        }
+
+        body {
+            background: #000000;
+            background-size: 600% 600%;
+            animation: gradientShift 20s ease infinite;
+            overflow: hidden;
+            font-family: "Marck Script", cursive;
+            touch-action: none;
+            color: #fff;
+        }
+
+        .radial-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, transparent 80%);
+            z-index: 0;
+        }
+
+        @media (max-width: 640px) {
+            #shooter-gif {
+                width: 80px !important;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translateY(-60%);
+            }
+            :root {
+                --scale: 21;
+            }
+        }
+
+        @media (min-width: 641px) {
+            .shooter-container {
+                left: 5rem;
+            }
+            #shooter-gif {
+                width: 240px !important;
+            }
+            :root {
+                --scale: 18;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            :root {
+                --scale: 15;
+            }
+        }
+
+        /* Interactive button styles - RESPONSIVE */
+        .container {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 25;
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+
+        .container.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .ico {
+            display: block;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }
+
+        .ico2 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .ico:before,
+        .ico:after,
+        .ico2:before,
+        .ico2:after {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: inline-block;
+            display: block;
+            color: var(--primary-red);
+            content: "\f004";
+            font-family: FontAwesome;
+            text-rendering: auto;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1;
+            text-align: center;
+        }
+
+        .ico .title {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 4;
+            font-family: "Pacifico", cursive;
+            color: #fff;
+            cursor: pointer;
+            text-shadow: 2px 4px 3px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            line-height: 1;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                width: 120px;
+            }
+            .ico {
+                height: 155px;
+            }
+            .ico .title {
+                font-size: 13px;
+            }
+            .ico:before,
+            .ico:after,
+            .ico2:before,
+            .ico2:after {
+                font-size: 4em;
+            }
+            .endtext h1 {
+                font-size: 32px;
+            }
+            .endtext h2 {
+                font-size: 20px;
+            }
+            .endtext h3 {
+                font-size: 17px;
+            }
+        }
+
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .container {
+                width: 200px;
+            }
+            .ico {
+                height: 200px;
+            }
+            .ico .title {
+                font-size: 24px;
+            }
+            .ico:before,
+            .ico:after,
+            .ico2:before,
+            .ico2:after {
+                font-size: 8em;
+            }
+            .endtext h1 {
+                font-size: 38px;
+            }
+            .endtext h2 {
+                font-size: 24px;
+            }
+            .endtext h3 {
+                font-size: 20px;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .container {
+                width: 320px;
+            }
+            .ico {
+                height: 320px;
+            }
+            .ico .title {
+                font-size: 30px;
+            }
+            .ico:before,
+            .ico:after,
+            .ico2:before,
+            .ico2:after {
+                font-size: 12em;
+            }
+            .endtext h1 {
+                font-size: 65px;
+            }
+            .endtext h2 {
+                font-size: 45px;
+            }
+        }
+
+        .ico2:before,
+        .ico2:after {
+            color: var(--primary-red);
+        }
+
+        .ico:before {
+            z-index: 3;
+        }
+
+        .ico:after {
+            animation: explode 4s infinite;
+        }
+
+        .ico2:before {
+            animation: explodeSmall 3s infinite;
+        }
+
+        .ico2:after {
+            animation: explodeSmall 2s infinite;
+        }
+
+        .open .ico {
+            animation: open 2s forwards;
+        }
+
+        .open .ico2 {
+            animation: open 2s forwards;
+        }
+
+        .open .ico .title {
+            opacity: 0;
+            transition: all 0.3s ease;
+            top: -100px;
+        }
+
+        .endtext {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -30%);
+            padding: 20px;
+            box-sizing: border-box;
+            touch-action: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .endtext::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .endtext::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .endtext::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #404040, #222222);
+            border-radius: 8px;
+            box-shadow: 0 0 6px rgba(255, 77, 109, 0.7);
+        }
+
+        .endtext::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #404040, #222222);
+        }
+
+        .open .endtext {
+            top: 0;
+            opacity: 1;
+            animation: show 1s ease-out forwards;
+        }
+
+        .endtext .close {
+            position: absolute;
+            top: 0;
+            right: 20px;
+            cursor: pointer;
+            text-shadow: 2px 4px 3px rgba(0, 0, 0, 0.3);
+            font-size: 24px;
+        }
+
+        .endtext h1,
+        .endtext h2,
+        .endtext h3 {
+            text-shadow: 2px 4px 3px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-weight: normal;
+            margin: 10px 0;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.6);
+                opacity: 0;
+            }
+        }
+
+        @keyframes explodeSmall {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        @keyframes open {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(var(--scale));
+            }
+        }
+
+        @keyframes show {
+            0% {
+                opacity: 0;
+                top: 200px;
+            }
+            100% {
+                opacity: 1;
+                top: 0;
+            }
+        }
+
+        .music-control {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .music-btn {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ff4d6d, #e6395c);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .music-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(255, 77, 109, 0.6);
+        }
+
+        .music-btn:active {
+            transform: scale(0.95);
+        }
+
+        .music-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #fff;
+        }
+
+        .volume-control {
+            width: 120px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 77, 109, 0.5);
+            margin-top: 10px;
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .volume-control.visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .volume-control input {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        .volume-control input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #ff4d6d;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .volume-control input::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #ff4d6d;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .music-control {
+                right: 15px;
+            }
+            .music-btn {
+                width: 35px;
+                height: 35px;
+            }
+            .music-btn svg {
+                width: 22px;
+                height: 22px;
+            }
+            .volume-control {
+                width: 100px;
+                margin-top: 8px;
+            }
+            .volume-control input {
+                height: 10px;
+            }
+            .volume-control input::-webkit-slider-thumb {
+                width: 18px;
+                height: 18px;
+            }
+            .volume-control input::-moz-range-thumb {
+                width: 18px;
+                height: 18px;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen flex items-center justify-start p-8 overflow-hidden">
+    <div class="radial-glow"></div>
+    <canvas id="starsCanvas" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
+    <div id="particles"></div>
+    <canvas id="textCanvas" style="position: absolute; top: 0; left: 0; z-index: 20;"></canvas>
+
+    <!-- Music controls -->
+    <div class="music-control">
+        <button class="music-btn" id="musicBtn" aria-label="Toggle music">
+            <svg id="playIcon" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+            </svg>
+            <svg id="pauseIcon" viewBox="0 0 24 24" style="display: none;">
+                <path d="M6 19h4V5H6zm8-14v14h4V5z" />
+            </svg>
+        </button>
+        <div class="volume-control" id="volumeControl">
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5" aria-label="Volume control">
+        </div>
+    </div>
+    <audio id="backgroundMusic" loop preload="auto">
+        <!-- Replaced the original URL with a public domain music file -->
+        <source src="Praesun - น้อมรับคำทำนาย (THE SUN) Feat. GUYGEEGEE  l「Official MV」.mp4" type="audio/mpeg">
+        เบราว์เซอร์ของคุณไม่รองรับการเล่นไฟล์เสียง
+    </audio>
+
+    <!-- Interactive button -->
+    <div class="container hidden">
+        <span class="ico">
+            <span class="ico2"></span>
+            <span class="title">คลิกที่นี่</span>
+        </span>
+        <div class="endtext">
+            <span class="close" title="Restart"><i class="fa fa-times"></i></span>
+            <h1>ฉันรักเธอที่รัก</h1>
+            <h2>เธอคือเหตุผลของความสุขของฉัน... ทำให้ฉันรู้สึกปลอดภัยเมื่ออยู่ข้างๆ เธอ...</h2>
+        </div>
+    </div>
+
+    <div class="absolute left-59 top-[30%] w-1/4 shooter-container">
+        <div id="loading" class="flex items-center justify-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+        </div>
+        <!-- Replaced the original GIF URL to make it a valid file path -->
+        <img id="shooter-gif" src="https://i.ibb.co/6P2T5Vb/02.gif" style="width: 160px; height: auto; display: none;" alt="Shooter" />
+    </div>
+
+    <audio id="shootSound" src="https://www.soundjay.com/button/sounds/button-16.mp3" preload="auto"></audio>
+    <audio id="heartSound" src="https://www.soundjay.com/button/sounds/button-9.mp3" preload="auto"></audio>
+
+    <script>
+        const endtext = document.querySelector('.endtext');
+        // Force proper positioning on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ensure FontAwesome is loaded before showing container
+            const checkFontAwesome = setInterval(function() {
+                const testElement = document.createElement('span');
+                testElement.className = 'fa fa-heart';
+                testElement.style.position = 'absolute';
+                testElement.style.visibility = 'hidden';
+                document.body.appendChild(testElement);
+
+                const width = window.getComputedStyle(testElement, ':before').getPropertyValue('content');
+                document.body.removeChild(testElement);
+
+                if (width !== 'none' && width !== '') {
+                    clearInterval(checkFontAwesome);
+                    // FontAwesome is loaded, ensure proper positioning
+                    const icoElements = document.querySelectorAll('.ico, .ico2');
+                    icoElements.forEach(element => {
+                        element.style.display = 'block';
+                        element.style.position = element.classList.contains('ico2') ? 'absolute' : 'block';
+                    });
+                }
+            }, 50);
+        });
+
+        endtext.addEventListener('touchmove', function(e) {
+            const scrollTop = endtext.scrollTop;
+            const scrollHeight = endtext.scrollHeight;
+            const offsetHeight = endtext.offsetHeight;
+            const atTop = scrollTop === 0;
+            const atBottom = scrollTop + offsetHeight >= scrollHeight;
+
+            if ((atTop && e.touches[0].clientY > 0) || (atBottom && e.touches[0].clientY < 0)) {
+                e.preventDefault(); // blocks body movement
+            }
+        }, {
+            passive: false
+        });
+
+        const starsCanvas = document.getElementById('starsCanvas');
+        const starsCtx = starsCanvas.getContext('2d');
+        starsCanvas.width = window.innerWidth;
+        starsCanvas.height = window.innerHeight;
+
+        const stars = [];
+        for (let i = 0; i < 80; i++) {
+            stars.push({
+                x: Math.random() * starsCanvas.width,
+                y: Math.random() * starsCanvas.height,
+                radius: Math.random() * 1.5 + 0.5,
+                opacity: Math.random() * 0.3 + 0.1,
+                twinkleSpeed: Math.random() * 0.015 + 0.005
+            });
+        }
+
+        function drawStars() {
+            starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+            stars.forEach(star => {
+                starsCtx.beginPath();
+                starsCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                starsCtx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+                starsCtx.fill();
+                star.opacity += star.twinkleSpeed;
+                if (star.opacity >= 0.4 || star.opacity <= 0.1) star.twinkleSpeed *= -1;
+            });
+            requestAnimationFrame(drawStars);
+        }
+        drawStars();
+
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 15; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * window.innerWidth + 'px';
+            particle.style.top = Math.random() * window.innerHeight + 'px';
+            particle.style.animationDelay = Math.random() * 6 + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+        const textCanvas = document.getElementById('textCanvas');
+        const textCtx = textCanvas.getContext('2d');
+        textCanvas.width = window.innerWidth;
+        textCanvas.height = window.innerHeight;
+
+        const textParticles = [];
+        let textAnimationStarted = false;
+
+        function initTextParticles() {
+            // Updated text to Thai
+            const text = "ฉันจะรักและดูแลเธอตลอดไป ❤️";
+            let fontSize = window.innerWidth <= 640 ? 70 : 90;
+            textCtx.font = `bold ${fontSize}px Arial`;
+            textCtx.textAlign = 'center';
+            textCtx.textBaseline = 'middle';
+
+            let maxWidth = textCtx.measureText(text).width;
+            const maxAllowedWidth = window.innerWidth * 0.85;
+            while (maxWidth > maxAllowedWidth && fontSize > 30) {
+                fontSize -= 5;
+                textCtx.font = `bold ${fontSize}px Arial`;
+                maxWidth = textCtx.measureText(text).width;
+            }
+
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                const testLine = currentLine + ' ' + words[i];
+                const testWidth = textCtx.measureText(testLine).width;
+                if (testWidth < maxAllowedWidth) {
+                    currentLine = testLine;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+
+            const lineHeight = fontSize * 1.2;
+            const totalHeight = lines.length * lineHeight;
+            const startY = window.innerWidth <= 640 ?
+                (window.innerHeight * 0.6) - (totalHeight / 2) + (fontSize / 2) :
+                (window.innerHeight * 0.8) - (totalHeight / 2) + (fontSize / 2);
+
+            const container = document.querySelector('.container');
+            let containerHeight;
+            if (window.innerWidth <= 640) {
+                containerHeight = 120;
+            } else if (window.innerWidth <= 1024) {
+                containerHeight = 200;
+            } else {
+                containerHeight = 320;
+            }
+            container.style.top = `${startY - containerHeight - 28}px`;
+
+            textCtx.fillStyle = 'white';
+            lines.forEach((line, index) => {
+                textCtx.fillText(line, window.innerWidth / 2, startY + (index * lineHeight));
+            });
+
+            const imageData = textCtx.getImageData(0, 0, textCanvas.width, textCanvas.height);
+            textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
+
+            textParticles.length = 0;
+            const step = window.innerWidth <= 640 ? 1 : 2;
+
+            for (let y = 0; y < textCanvas.height; y += step) {
+                for (let x = 0; x < textCanvas.width; x += step) {
+                    if (imageData.data[(y * textCanvas.width + x) * 4 + 3] > 128) {
+                        textParticles.push({
+                            x: Math.random() * textCanvas.width,
+                            y: Math.random() * textCanvas.height,
+                            targetX: x,
+                            targetY: y,
+                            speed: 0.03 + Math.random() * 0.04,
+                            opacity: 0,
+                            size: window.innerWidth <= 640 ? Math.random() * 0.2 + 0.5 : Math.random() * 1.5 + 1
+                        });
+                    }
+                }
+            }
+        }
+
+        function animateTextParticles() {
+            if (!textAnimationStarted) return;
+            textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
+            let allParticlesInPlace = true;
+
+            const computedStyle = getComputedStyle(document.documentElement);
+            const primaryRed = computedStyle.getPropertyValue('--primary-red').trim();
+            textParticles.forEach(p => {
+                const dx = p.targetX - p.x;
+                const dy = p.targetY - p.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 1) {
+                    allParticlesInPlace = false;
+                    p.x += dx * p.speed;
+                    p.y += dy * p.speed;
+                } else {
+                    p.x = p.targetX;
+                    p.y = p.targetY;
+                }
+
+                p.opacity = Math.min(p.opacity + 2.03, 1);
+
+                textCtx.beginPath();
+                textCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                textCtx.fillStyle = `${primaryRed}`;
+                textCtx.shadowBlur = 15;
+                textCtx.fill();
+            });
+
+            if (!allParticlesInPlace) {
+                requestAnimationFrame(animateTextParticles);
+            }
+        }
+
+        const shooter = document.getElementById('shooter-gif');
+        const loading = document.getElementById('loading');
+        let centerX = window.innerWidth <= 640 ? window.innerWidth * 0.7 : window.innerWidth * 0.75;
+        let centerY = window.innerWidth <= 640 ? window.innerHeight * 0.35 : window.innerHeight * 0.4;
+        const heartPositions = [];
+        let currentShot = 0;
+
+        function updateHeartPositions() {
+            heartPositions.length = 0;
+            const scale = window.innerWidth <= 640 ? 60 : 150;
+            for (let t = 0; t <= 2 * Math.PI; t += 0.1) {
+                const x = 16 * Math.pow(Math.sin(t), 3) * scale / 16;
+                const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * scale / 16;
+                heartPositions.push({
+                    x: centerX + x,
+                    y: centerY + y
+                });
+            }
+        }
+
+        updateHeartPositions();
+
+        function shootHeart() {
+            if (currentShot >= heartPositions.length) return;
+
+            const shooterRect = shooter.getBoundingClientRect();
+            const startX = shooterRect.right - 10;
+            const startY = shooterRect.top + shooterRect.height / 2;
+
+            const target = heartPositions[currentShot];
+            const heart = document.createElement('div');
+            heart.className = 'heart-bullet';
+            heart.style.left = startX + 'px';
+            heart.style.top = startY + 'px';
+
+            const heartSize = window.innerWidth <= 640 ? 15 : 40;
+            heart.innerHTML = `
+                <svg width="${heartSize}" height="${heartSize}" viewBox="0 0 24 24">
+                    <path fill="var(--primary-red)" d="M12 4.419c-2.826-5.695-11.999-4.064-11.999 3.27 0 7.27 9.594 11.222 12 15.616 2.406-4.394 12-8.346 12-15.616 0-7.334-9.17-8.972-12-3.27z"/>
+                </svg>
+            `;
+
+            const deltaX = target.x - startX;
+            const deltaY = target.y - startY;
+            heart.style.setProperty('--tx', deltaX + 'px');
+            heart.style.setProperty('--ty', deltaY + 'px');
+
+            document.body.appendChild(heart);
+
+            try {
+                document.getElementById('shootSound').play().catch(() => {});
+            } catch (e) {}
+
+            if (currentShot === heartPositions.length - 1) {
+                // The user provided the new path, so we use it directly
+                shooter.src = "https://i.ibb.co/6P2T5Vb/02.gif";
+                try {
+                    document.getElementById('heartSound').play().catch(() => {});
+                } catch (e) {}
+
+                setTimeout(() => {
+                    textAnimationStarted = true;
+                    document.querySelector('.container').classList.remove('hidden');
+                    animateTextParticles();
+                }, 500);
+            }
+
+            currentShot++;
+        }
+
+        function startShooting() {
+            const interval = setInterval(() => {
+                if (currentShot >= heartPositions.length) {
+                    clearInterval(interval);
+                    return;
+                }
+                shootHeart();
+            }, 120);
+        }
+
+        // Wait for the initial GIF to load before starting the animation
+        shooter.onload = function() {
+            loading.style.display = 'none'; // Hide the spinner
+            shooter.style.display = 'block'; // Show the GIF
+            startShooting();
+        };
+
+        // Fallback in case the image is already cached/loaded
+        if (shooter.complete) {
+            loading.style.display = 'none';
+            shooter.style.display = 'block';
+            startShooting();
+        }
+
+        // jQuery for the interactive button
+        $(document).ready(function() {
+            $(".title").click(function() {
+                $(".container").addClass("open");
+            });
+            $(".close").click(function() {
+                $(".container").removeClass("open");
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            starsCanvas.width = window.innerWidth;
+            starsCanvas.height = window.innerHeight;
+            textCanvas.width = window.innerWidth;
+            textCanvas.height = window.innerHeight;
+
+            stars.forEach(star => {
+                star.x = Math.random() * starsCanvas.width;
+                star.y = Math.random() * starsCanvas.height;
+            });
+
+            centerX = window.innerWidth <= 640 ? window.innerWidth * 0.7 : window.innerWidth * 0.75;
+            centerY = window.innerWidth <= 640 ? window.innerHeight * 0.35 : window.innerHeight * 0.4;
+            updateHeartPositions();
+            initTextParticles();
+        });
+
+        initTextParticles();
+
+        function setupMusicControls() {
+            const music = document.getElementById("backgroundMusic");
+            const musicBtn = document.getElementById("musicBtn");
+            const playIcon = document.getElementById("playIcon");
+            const pauseIcon = document.getElementById("pauseIcon");
+            const volumeSlider = document.getElementById("volumeSlider");
+            const volumeControl = document.getElementById("volumeControl");
+
+            if (!music || !musicBtn || !volumeSlider || !volumeControl) {
+                console.error('Music or control elements not found');
+                return;
+            }
+
+            music.volume = volumeSlider.value;
+
+            music.load();
+            music.currentTime = 0;
+            music.play().then(() => {
+                console.log('Autoplay successful at:', music.currentTime);
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+            }).catch(error => {
+                console.warn('Autoplay blocked:', error.message);
+            });
+
+            function toggleMusic() {
+                if (music.paused) {
+                    music.play().then(() => {
+                        console.log('Music playing at:', music.currentTime);
+                        playIcon.style.display = 'none';
+                        pauseIcon.style.display = 'block';
+                    }).catch(error => {
+                        console.error('Error playing audio:', error.message);
+                    });
+                } else {
+                    music.pause();
+                    console.log('Music paused at:', music.currentTime);
+                    playIcon.style.display = 'block';
+                    pauseIcon.style.display = 'none';
+                }
+            }
+
+            musicBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMusic();
+                if (!volumeControl.classList.contains('visible')) {
+                    volumeControl.classList.add('visible');
+                    clearTimeout(hideVolumeTimeout);
+                    hideVolumeTimeout = setTimeout(() => volumeControl.classList.remove('visible'), 2000);
+                } else {
+                    volumeControl.classList.remove('visible');
+                }
+            });
+
+            let hideVolumeTimeout = null;
+            volumeSlider.addEventListener('input', (e) => {
+                music.volume = e.target.value;
+                console.log('Volume set to:', music.volume);
+                clearTimeout(hideVolumeTimeout);
+                volumeControl.classList.add('visible');
+            });
+
+            volumeSlider.addEventListener('change', () => {
+                hideVolumeTimeout = setTimeout(() => volumeControl.classList.remove('visible'), 2000);
+            });
+
+            volumeControl.addEventListener('mouseenter', () => clearTimeout(hideVolumeTimeout));
+            volumeControl.addEventListener('mouseleave', () => {
+                hideVolumeTimeout = setTimeout(() => volumeControl.classList.remove('visible'), 2000);
+            });
+
+            volumeSlider.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                clearTimeout(hideVolumeTimeout);
+            });
+            volumeSlider.addEventListener('touchend', () => {
+                hideVolumeTimeout = setTimeout(() => volumeControl.classList.remove('visible'), 2000);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!volumeControl.contains(e.target) && !musicBtn.contains(e.target)) {
+                    volumeControl.classList.remove('visible');
+                    clearTimeout(hideVolumeTimeout);
+                }
+            });
+
+            music.addEventListener('loadeddata', () => console.log('Audio data loaded'));
+            music.addEventListener('error', (e) => console.error('Audio error:', e.message));
+            music.addEventListener('play', () => console.log('Music play event'));
+            music.addEventListener('pause', () => console.log('Music pause event'));
+        }
+        setupMusicControls();
+    </script>
+</body>
+</html>
