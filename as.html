@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional BMC Suite & AI Assistant</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter & Noto Sans Thai -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons for UI -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <!-- Custom Styles and Animations -->
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans Thai', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Tooltip styles */
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltip-text {
+            visibility: hidden; width: 240px; background-color: #374151; color: #fff;
+            text-align: center; border-radius: 6px; padding: 8px; position: absolute;
+            z-index: 50; bottom: 125%; left: 50%; margin-left: -120px;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltip-text { visibility: visible; opacity: 1; }
+        
+        /* Chatbot bubble animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(22, 163, 175, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(22, 163, 175, 0); }
+        }
+        .chat-bubble-pulse { animation: pulse 2.5s infinite; }
+
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        /* Fade-in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+
+        /* Modal styles */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.7); z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        .tab-btn.active {
+            color: #22d3ee; /* cyan-400 */
+            border-color: #22d3ee;
+        }
+        .bmc-block-status {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-complete { background-color: #10b981; color: white; } /* green-500 */
+        .status-inprogress { background-color: #f59e0b; color: white; } /* amber-500 */
+        .status-pending { background-color: #6b7280; color: white; } /* gray-500 */
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 antialiased">
+
+    <!-- Main Container -->
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-4xl font-extrabold text-cyan-400 tracking-tight">BMC Professional Suite</h1>
+                <p class="text-gray-400 mt-2">เครื่องมือวางแผนโมเดลธุรกิจสำหรับผู้ประกอบการยุคใหม่</p>
+            </div>
+            <div>
+                <button class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg transition flex items-center shadow-lg">
+                    <i data-feather="save" class="mr-2 h-5 w-5"></i>
+                    Save Project
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="mb-8 border-b border-gray-700 overflow-x-auto whitespace-nowrap custom-scrollbar">
+            <nav class="flex space-x-2 sm:space-x-4" aria-label="Tabs">
+                <button onclick="switchView('dashboard')" class="tab-btn active py-4 px-3 border-b-2 font-semibold text-base">ภาพรวม</button>
+                <button onclick="switchView('customerSegments')" class="tab-btn text-gray-400 hover:text-white py-4 px-3 border-b-2 border-transparent font-semibold text-base">กลุ่มลูกค้า</button>
+                <button onclick="switchView('valuePropositions')" class="tab-btn text-gray-400 hover:text-white py-4 px-3 border-b-2 border-transparent font-semibold text-base">คุณค่า</button>
+                <button onclick="switchView('channels')" class="tab-btn text-gray-400 hover:text-white py-4 px-3 border-b-2 border-transparent font-semibold text-base">ช่องทาง</button>
+                <button onclick="switchView('customerRelationships')" class="tab-btn text-gray-400 hover:text-white py-4 px-3 border-b-2 border-transparent font-semibold text-base">ความสัมพันธ์</button>
+                <button onclick="switchView('revenueStreams')" class="tab-btn text-gray-400 hover:text-white py-4 px-3 border-b-2 border-transparent font-semibold text-base">รายได้</button>
+                <button onclick="switchView('keyResources')" class="tab-btn text-gray-400 hover:text-white py-4 px-3 border-b-2 border-transparent font-semibold text-base">ทรัพยากรหลัก</button>
+                <button onclick="switchView('keyActivities')" class="tab-btn text-gray-400 hover:text-white py-4 px-3 border-b-2 border-transparent font-semibold text-base">กิจกรรมหลัก</button>
+                <button onclick="switchView('keyPartners')" class="tab-btn text-gray-400 hover:text-white py-4 px-3 border-b-2 border-transparent font-semibold text-base">คู่ค้าหลัก</button>
+                <button onclick="switchView('costStructure')" class="tab-btn text-gray-400 hover:text-white py-4 px-3 border-b-2 border-transparent font-semibold text-base">โครงสร้างต้นทุน</button>
+            </nav>
+        </div>
+
+        <!-- Main Content Area -->
+        <main id="main-content">
+            <!-- All views will be dynamically rendered here -->
+        </main>
+    </div>
+
+    <!-- Chatbot Area -->
+    <div id="chatbot-container" class="fixed bottom-5 right-5 z-50">
+        <button id="chat-bubble" onclick="toggleChat()" class="bg-cyan-600 text-white w-16 h-16 rounded-full flex items-center justify-center shadow-lg chat-bubble-pulse hover:bg-cyan-500 transition-transform transform hover:scale-110">
+            <i data-feather="message-square" class="h-8 w-8"></i>
+        </button>
+        <div id="chat-window" class="hidden absolute bottom-20 right-0 w-80 sm:w-96 bg-gray-800 rounded-xl shadow-2xl border border-gray-700 flex flex-col transition-all duration-300 transform origin-bottom-right scale-95 opacity-0">
+            <div class="bg-gray-700 p-4 rounded-t-xl flex justify-between items-center">
+                <h3 class="font-bold text-lg flex items-center"><i data-feather="user-check" class="mr-2 h-5 w-5 text-cyan-400"></i>AI Assistant "ใส่ใจ"</h3>
+                <button onclick="toggleChat()" class="text-gray-400 hover:text-white"><i data-feather="x" class="h-6 w-6"></i></button>
+            </div>
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto custom-scrollbar" style="max-height: 400px;"></div>
+            <div id="chat-options-container" class="p-4 border-t border-gray-700"></div>
+            <div id="chat-input-container" class="p-4 border-t border-gray-700 hidden">
+                 <div class="relative">
+                    <input type="text" id="chat-input" class="w-full bg-gray-900 border border-gray-600 rounded-lg py-2 pl-4 pr-12 text-white focus:ring-2 focus:ring-cyan-500" placeholder="พิมพ์ข้อความ...">
+                    <button id="chat-send-btn" class="absolute right-2 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 p-2"><i data-feather="send"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Container -->
+    <div id="modal-container"></div>
+
+
+    <script>
+    // ===================================================================================
+    // III. SCRIPT LOGIC - APPLICATION CORE
+    // ===================================================================================
+
+    // --- 1. GLOBAL STATE MANAGEMENT ---
+    // A single source of truth for the entire business model.
+    // Simulates a database or a state management store.
+    let businessModel = {
+        projectName: 'My Awesome Startup',
+        customerSegments: [],
+        valuePropositions: [],
+        channels: [],
+        customerRelationships: {
+            get: { text: '', types: [] },
+            keep: { text: '', types: [] },
+            grow: { text: '', types: [] },
+        },
+        revenueStreams: [],
+        keyResources: [],
+        keyActivities: [],
+        keyPartners: [],
+        costStructure: [],
+    };
+
+    // --- 2. TEMPLATING ENGINE ---
+    // Functions that generate HTML for different views.
+    // This separates logic from presentation.
+
+    function getDashboardView() {
+        const getStatus = (arr) => arr.length > 0 ? { class: 'status-complete', text: 'Completed' } : { class: 'status-pending', text: 'Pending' };
+        
+        // FIX: Correctly calculate status for customerRelationships
+        const cr = businessModel.customerRelationships;
+        const allCrTypes = [...cr.get.types, ...cr.keep.types, ...cr.grow.types];
+        const allCrTexts = cr.get.text + cr.keep.text + cr.grow.text;
+        const isCrComplete = allCrTypes.length > 0 || allCrTexts.trim().length > 0;
+        const crStatusArr = isCrComplete ? [1] : []; // Pass a non-empty array for 'complete' status
+        
+        return `
+        <div id="dashboard-view" class="view-content fade-in">
+            <h2 class="text-3xl font-bold mb-6 text-white">ภาพรวมโมเดลธุรกิจ: ${businessModel.projectName}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <!-- Outer Ring -->
+                ${createBmcBlock('keyPartners', 'คู่ค้าหลัก', getStatus(businessModel.keyPartners), businessModel.keyPartners.length)}
+                ${createBmcBlock('keyActivities', 'กิจกรรมหลัก', getStatus(businessModel.keyActivities), businessModel.keyActivities.length)}
+                ${createBmcBlock('valuePropositions', 'คุณค่า', getStatus(businessModel.valuePropositions), businessModel.valuePropositions.length, 'lg:col-span-1 xl:col-span-1')}
+                ${createBmcBlock('customerRelationships', 'ความสัมพันธ์', getStatus(crStatusArr), allCrTypes.length)}
+                ${createBmcBlock('customerSegments', 'กลุ่มลูกค้า', getStatus(businessModel.customerSegments), businessModel.customerSegments.length)}
+                
+                <!-- Inner Ring -->
+                ${createBmcBlock('keyResources', 'ทรัพยากรหลัก', getStatus(businessModel.keyResources), businessModel.keyResources.length, 'lg:col-start-2')}
+                ${createBmcBlock('channels', 'ช่องทาง', getStatus(businessModel.channels), businessModel.channels.length)}
+                
+                <!-- Bottom Row -->
+                ${createBmcBlock('costStructure', 'โครงสร้างต้นทุน', getStatus(businessModel.costStructure), businessModel.costStructure.length, 'lg:col-span-2 xl:col-span-2')}
+                ${createBmcBlock('revenueStreams', 'รายได้', getStatus(businessModel.revenueStreams), businessModel.revenueStreams.length, 'lg:col-span-2 xl:col-span-3')}
+            </div>
+        </div>`;
+    }
+
+    function createBmcBlock(viewName, title, status, count, extraClasses = '') {
+        return `
+        <div class="bg-gray-800 p-4 rounded-xl flex flex-col justify-between border border-gray-700 hover:border-cyan-500 transition cursor-pointer relative h-48 ${extraClasses}" onclick="switchView('${viewName}')">
+             <div class="bmc-block-status ${status.class}">${status.text}</div>
+            <div>
+                <h3 class="font-bold text-lg">${title}</h3>
+                <p class="text-sm text-gray-400">${count} items</p>
+            </div>
+            <div class="text-right text-cyan-400">
+                <i data-feather="arrow-right-circle"></i>
+            </div>
+        </div>`;
+    }
+
+    function getGenericListView(config) {
+        return `
+        <div id="${config.id}" class="view-content fade-in">
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white">${config.title}</h2>
+                        <p class="text-gray-400 mt-1">${config.description}</p>
+                    </div>
+                    <button onclick="${config.addFunction}" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg transition flex items-center mt-4 sm:mt-0 shadow-md">
+                        <i data-feather="plus" class="mr-2 h-5 w-5"></i>
+                        ${config.addButtonText}
+                    </button>
+                </div>
+                <div id="${config.listId}" class="space-y-4">
+                    <!-- Items will be rendered here -->
+                </div>
+            </div>
+        </div>`;
+    }
+    
+    function getCustomerRelationshipsView() {
+        const types = ['Personal Assistance', 'Self-Service', 'Automated Services', 'Communities', 'Co-creation'];
+        const renderPhase = (phase) => {
+            // Ensure phase exists before accessing properties
+            const phaseData = businessModel.customerRelationships[phase] || { types: [], text: '' };
+            return `
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold mb-3 capitalize text-cyan-400">${phase}</h3>
+                <div class="flex flex-wrap gap-3 mb-3">
+                    ${types.map(type => `<button onclick="toggleRelationshipType('${phase}', '${type}')" class="${phaseData.types.includes(type) ? 'bg-cyan-600' : 'bg-gray-700'} hover:bg-cyan-500 text-white font-medium py-2 px-4 rounded-full transition text-sm">${type}</button>`).join('')}
+                </div>
+                <textarea oninput="updateRelationshipText('${phase}', this.value)" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 transition" rows="4" placeholder="อธิบายกลยุทธ์ของคุณในขั้นตอนนี้...">${phaseData.text}</textarea>
+            </div>`;
+        }
+        return `
+        <div id="customerRelationships-view" class="view-content fade-in">
+             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                <h2 class="text-3xl font-bold text-white">Customer Relationships</h2>
+                <p class="text-gray-400 mb-8">คุณสร้าง, รักษา และขยายความสัมพันธ์กับลูกค้าอย่างไรในแต่ละช่วง?</p>
+                ${renderPhase('get')}
+                ${renderPhase('keep')}
+                ${renderPhase('grow')}
+             </div>
+        </div>`;
+    }
+    
+    // --- 3. RENDER LOGIC ---
+    // Functions to update the DOM based on the current state.
+    
+    function renderView(viewName) {
+        const mainContent = document.getElementById('main-content');
+        let viewHtml = '';
+        
+        switch (viewName) {
+            case 'dashboard': viewHtml = getDashboardView(); break;
+            case 'customerRelationships': viewHtml = getCustomerRelationshipsView(); break;
+            default: 
+                if (viewConfigs[viewName]) {
+                    viewHtml = getGenericListView(viewConfigs[viewName]);
+                } else {
+                    viewHtml = `<div class="text-center p-8 text-gray-500">View not implemented yet.</div>`;
+                }
+                break;
+        }
+        
+        mainContent.innerHTML = viewHtml;
+        
+        // After rendering the container, render the list items if applicable
+        if (viewConfigs[viewName] && businessModel[viewConfigs[viewName].dataKey]) {
+            renderList(viewName);
+        }
+        
+        feather.replace(); // Re-initialize icons
+    }
+    
+    function renderList(viewName) {
+        const config = viewConfigs[viewName];
+        if (!config) return;
+        const listContainer = document.getElementById(config.listId);
+        const data = businessModel[config.dataKey];
+        
+        if (!listContainer) return;
+
+        if (data.length === 0) {
+            listContainer.innerHTML = `<p class="text-gray-500 text-center py-12">ยังไม่มีข้อมูล... คลิกปุ่ม '${config.addButtonText}' เพื่อเริ่มต้น</p>`;
+        } else {
+            listContainer.innerHTML = data.map((item, index) => config.renderItem(item, index)).join('');
+        }
+        feather.replace();
+    }
+    
+    // --- 4. VIEW CONFIGURATIONS & ITEM RENDERERS ---
+    // A centralized configuration for each view to keep code DRY.
+    const viewConfigs = {
+        keyPartners: {
+            id: 'keyPartners-view', title: 'Key Partners', description: 'ใครคือคู่ค้าและซัพพลายเออร์หลักของคุณ?',
+            addFunction: 'openPartnerModal()', addButtonText: 'เพิ่มคู่ค้า', listId: 'partners-list',
+            dataKey: 'keyPartners',
+            renderItem: (p, i) => `
+            <div class="bg-gray-900 p-4 rounded-lg border border-gray-700 fade-in">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${p.type === 'Strategic Alliance' ? 'bg-purple-600' : 'bg-blue-600'}">${p.type}</span>
+                        <h4 class="font-bold text-xl text-cyan-400 mt-2">${p.name}</h4>
+                        <p class="text-gray-400 text-sm mt-1">${p.motivation}</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="openPartnerModal(${i})" class="text-gray-400 hover:text-white"><i data-feather="edit-2"></i></button>
+                        <button onclick="deleteItem('keyPartners', ${i})" class="text-gray-400 hover:text-red-500"><i data-feather="trash-2"></i></button>
+                    </div>
+                </div>
+            </div>`
+        },
+        keyActivities: {
+            id: 'keyActivities-view', title: 'Key Activities', description: 'กิจกรรมที่สำคัญที่สุดที่ทำให้ธุรกิจของคุณดำเนินไปได้คืออะไร?',
+            addFunction: 'openActivityModal()', addButtonText: 'เพิ่มกิจกรรม', listId: 'activities-list',
+            dataKey: 'keyActivities',
+            renderItem: (a, i) => `
+            <div class="bg-gray-900 p-4 rounded-lg border border-gray-700 fade-in">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${a.category === 'Production' ? 'bg-green-600' : (a.category === 'Problem Solving' ? 'bg-yellow-600' : 'bg-indigo-600')}">${a.category}</span>
+                        <h4 class="font-bold text-xl text-cyan-400 mt-2">${a.name}</h4>
+                        <p class="text-gray-400 text-sm mt-1">${a.description}</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="openActivityModal(${i})" class="text-gray-400 hover:text-white"><i data-feather="edit-2"></i></button>
+                        <button onclick="deleteItem('keyActivities', ${i})" class="text-gray-400 hover:text-red-500"><i data-feather="trash-2"></i></button>
+                    </div>
+                </div>
+            </div>`
+        },
+        // ... Add configs for all other 7 views
+    };
+
+
+    // --- 5. MODAL & DATA MANIPULATION LOGIC ---
+
+    function openPartnerModal(index = null) {
+        const isEditing = index !== null;
+        const partner = isEditing ? businessModel.keyPartners[index] : { name: '', type: 'Supplier', motivation: '' };
+        
+        const modalHtml = `
+        <div id="partner-modal" class="modal-backdrop">
+            <div class="modal-content bg-gray-800 w-full max-w-lg rounded-xl shadow-lg border border-gray-700">
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-4">${isEditing ? 'Edit Partner' : 'Add New Partner'}</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="font-semibold">Partner Name</label>
+                            <input id="partnerName" type="text" value="${partner.name}" class="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md p-2 focus:ring-1 focus:ring-cyan-500">
+                        </div>
+                         <div>
+                            <label class="font-semibold">Partner Type</label>
+                            <select id="partnerType" class="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md p-2 focus:ring-1 focus:ring-cyan-500">
+                                <option ${partner.type === 'Supplier' ? 'selected' : ''}>Supplier</option>
+                                <option ${partner.type === 'Strategic Alliance' ? 'selected' : ''}>Strategic Alliance</option>
+                                <option ${partner.type === 'Co-opetition' ? 'selected' : ''}>Co-opetition</option>
+                                <option ${partner.type === 'Joint Venture' ? 'selected' : ''}>Joint Venture</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-semibold">Motivation / Benefit</label>
+                            <textarea id="partnerMotivation" rows="3" class="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md p-2 focus:ring-1 focus:ring-cyan-500">${partner.motivation}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-700 p-4 flex justify-end space-x-3 rounded-b-xl">
+                    <button onclick="closeModal('partner-modal')" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+                    <button onclick="savePartner(${index})" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg">Save Partner</button>
+                </div>
+            </div>
+        </div>`;
+        document.getElementById('modal-container').innerHTML = modalHtml;
+    }
+
+    function savePartner(index) {
+        const partner = {
+            name: document.getElementById('partnerName').value,
+            type: document.getElementById('partnerType').value,
+            motivation: document.getElementById('partnerMotivation').value,
+        };
+        if (index === null) { // Adding new
+            businessModel.keyPartners.push(partner);
+        } else { // Editing existing
+            businessModel.keyPartners[index] = partner;
+        }
+        closeModal('partner-modal');
+        renderList('keyPartners');
+        // Also re-render dashboard if it's the current view to update status
+        if (currentView === 'dashboard') switchView('dashboard');
+    }
+    
+    function openActivityModal(index = null) {
+        const isEditing = index !== null;
+        const activity = isEditing ? businessModel.keyActivities[index] : { name: '', category: 'Production', description: '' };
+        
+        const modalHtml = `
+        <div id="activity-modal" class="modal-backdrop">
+            <div class="modal-content bg-gray-800 w-full max-w-lg rounded-xl shadow-lg border border-gray-700">
+                <div class="p-6">
+                    <h3 class="text-2xl font-bold mb-4">${isEditing ? 'Edit Activity' : 'Add New Activity'}</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="font-semibold">Activity Name</label>
+                            <input id="activityName" type="text" value="${activity.name}" class="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md p-2 focus:ring-1 focus:ring-cyan-500">
+                        </div>
+                         <div>
+                            <label class="font-semibold">Category</label>
+                            <select id="activityCategory" class="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md p-2 focus:ring-1 focus:ring-cyan-500">
+                                <option ${activity.category === 'Production' ? 'selected' : ''}>Production</option>
+                                <option ${activity.category === 'Problem Solving' ? 'selected' : ''}>Problem Solving</option>
+                                <option ${activity.category === 'Platform/Network' ? 'selected' : ''}>Platform/Network</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-semibold">Description</label>
+                            <textarea id="activityDescription" rows="3" class="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md p-2 focus:ring-1 focus:ring-cyan-500">${activity.description}</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-700 p-4 flex justify-end space-x-3 rounded-b-xl">
+                    <button onclick="closeModal('activity-modal')" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+                    <button onclick="saveActivity(${index})" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg">Save Activity</button>
+                </div>
+            </div>
+        </div>`;
+        document.getElementById('modal-container').innerHTML = modalHtml;
+    }
+
+    function saveActivity(index) {
+        const activity = {
+            name: document.getElementById('activityName').value,
+            category: document.getElementById('activityCategory').value,
+            description: document.getElementById('activityDescription').value,
+        };
+        if (index === null) {
+            businessModel.keyActivities.push(activity);
+        } else {
+            businessModel.keyActivities[index] = activity;
+        }
+        closeModal('activity-modal');
+        renderList('keyActivities');
+        if (currentView === 'dashboard') switchView('dashboard');
+    }
+
+    function deleteItem(dataKey, index) {
+        if (confirm('Are you sure you want to delete this item?')) {
+            businessModel[dataKey].splice(index, 1);
+            renderList(Object.keys(viewConfigs).find(key => viewConfigs[key].dataKey === dataKey));
+            if (currentView === 'dashboard') switchView('dashboard');
+        }
+    }
+    
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if(modal) modal.remove();
+    }
+    
+    function toggleRelationshipType(phase, type) {
+        const types = businessModel.customerRelationships[phase].types;
+        const index = types.indexOf(type);
+        if (index > -1) {
+            types.splice(index, 1);
+        } else {
+            types.push(type);
+        }
+        renderView('customerRelationships');
+    }
+
+    function updateRelationshipText(phase, text) {
+        businessModel.customerRelationships[phase].text = text;
+    }
+
+
+    // --- 6. VIEW SWITCHING ---
+    let currentView = 'dashboard';
+    
+    function switchView(viewName) {
+        currentView = viewName;
+        // Update tabs
+        document.querySelectorAll('.tab-btn').forEach(tab => {
+            const isActive = tab.getAttribute('onclick') === `switchView('${viewName}')`;
+            tab.classList.toggle('active', isActive);
+            tab.classList.toggle('text-gray-400', !isActive);
+            tab.classList.toggle('border-transparent', !isActive);
+        });
+        // Render the view
+        renderView(viewName);
+    }
+    
+    // --- 7. CHATBOT LOGIC ---
+    const chatWindow = document.getElementById('chat-window');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatOptionsContainer = document.getElementById('chat-options-container');
+    let isChatOpen = false;
+
+    function toggleChat() {
+        isChatOpen = !isChatOpen;
+        if (isChatOpen) {
+            chatWindow.classList.remove('hidden', 'scale-95', 'opacity-0');
+            chatWindow.classList.add('scale-100', 'opacity-100');
+            if (chatMessages.children.length === 0) {
+                startChat();
+            }
+        } else {
+            chatWindow.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => chatWindow.classList.add('hidden'), 300);
+        }
+    }
+
+    function addBotMessage(message) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex mb-4 fade-in';
+        msgDiv.innerHTML = `
+            <div class="w-9 h-9 rounded-full flex items-center justify-center bg-cyan-600 mr-3 flex-shrink-0">
+                <i data-feather="user-check" class="h-5 w-5 text-white"></i>
+            </div>
+            <div class="bg-gray-700 p-3 rounded-lg max-w-xs">
+                <p class="text-sm">${message}</p>
+            </div>
+        `;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        feather.replace();
+    }
+
+    function addUserMessage(message) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'flex justify-end mb-4 fade-in';
+        msgDiv.innerHTML = `
+            <div class="bg-cyan-600 p-3 rounded-lg max-w-xs">
+                <p class="text-sm text-white">${message}</p>
+            </div>
+        `;
+        chatMessages.appendChild(msgDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showOptions(options) {
+        chatOptionsContainer.innerHTML = '';
+        const optionsWrapper = document.createElement('div');
+        optionsWrapper.className = 'flex flex-wrap gap-2 justify-center fade-in';
+        options.forEach(option => {
+            const button = document.createElement('button');
+            button.className = 'bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium py-2 px-3 rounded-full transition';
+            button.innerText = option.text;
+            button.onclick = () => handleOptionClick(option);
+            optionsWrapper.appendChild(button);
+        });
+        chatOptionsContainer.appendChild(optionsWrapper);
+    }
+
+    function handleOptionClick(option) {
+        addUserMessage(option.text);
+        chatOptionsContainer.innerHTML = '<p class="text-center text-gray-500 text-sm">กำลังพิมพ์...</p>';
+        
+        setTimeout(() => {
+            if (typeof option.action === 'function') {
+                option.action();
+            }
+        }, 1000);
+    }
+
+    const chatFlow = {
+        start: {
+            message: 'สวัสดีค่ะ! 👋 "น้องใส่ใจ" ยินดีให้บริการค่ะ ไม่ทราบว่าวันนี้ต้องการให้ช่วยเรื่องอะไรคะ?',
+            options: [
+                { text: 'อธิบายเกี่ยวกับ BMC', action: () => showState('explainBMC') },
+                { text: 'แนะนำการใช้งาน', action: () => showState('howToUse') },
+                { text: 'ติดต่อทีมงาน', action: () => showState('contactAgent') }
+            ]
+        },
+        explainBMC: {
+            message: 'Business Model Canvas (BMC) คือเครื่องมือที่ช่วยออกแบบโมเดลธุรกิจผ่าน 9 องค์ประกอบสำคัญค่ะ ช่วยให้เห็นภาพรวมและจุดที่ต้องพัฒนาได้ง่ายขึ้น สนใจดูรายละเอียดส่วนไหนเป็นพิเศษไหมคะ?',
+            options: [
+                { text: 'กลุ่มลูกค้า (CS)', action: () => { switchView('customerSegments'); addBotMessage('ได้เลยค่ะ เปิดหน้ากลุ่มลูกค้าให้แล้วค่ะ'); showOptions(chatFlow.explainBMC.options.filter(o => o.text !== 'กลุ่มลูกค้า (CS)')); } },
+                { text: 'คุณค่า (VP)', action: () => { switchView('valuePropositions'); addBotMessage('ได้เลยค่ะ เปิดหน้าคุณค่าให้แล้วค่ะ'); showOptions(chatFlow.explainBMC.options.filter(o => o.text !== 'คุณค่า (VP)')); } },
+                { text: 'กลับเมนูหลัก', action: () => showState('start') }
+            ]
+        },
+        howToUse: {
+            message: 'คุณสามารถคลิกที่ Tab ด้านบนเพื่อไปยังส่วนต่างๆ ของ BMC และกดปุ่ม "เพิ่ม..." เพื่อบันทึกข้อมูลได้เลยค่ะ หากต้องการความช่วยเหลือเพิ่มเติม ถามได้เลยนะคะ',
+            options: [
+                { text: 'ขอบคุณ', action: () => showState('start') },
+            ]
+        },
+        contactAgent: {
+            message: 'รับทราบค่ะ ขณะนี้ยังไม่สามารถเชื่อมต่อกับเจ้าหน้าที่ได้ แต่คุณสามารถส่งข้อความถึงทีมงานได้ที่ support@bmcsuite.com นะคะ',
+            options: [
+                { text: 'กลับเมนูหลัก', action: () => showState('start') }
+            ]
+        }
+    };
+
+    function showState(stateName) {
+        const state = chatFlow[stateName];
+        if (state) {
+            addBotMessage(state.message);
+            if (state.options && state.options.length > 0) {
+                showOptions(state.options);
+            } else {
+                chatOptionsContainer.innerHTML = '';
+            }
+        }
+    }
+
+    function startChat() {
+        chatMessages.innerHTML = '';
+        chatOptionsContainer.innerHTML = '';
+        setTimeout(() => showState('start'), 500);
+    }
+
+    // --- 8. INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        switchView('dashboard');
+        feather.replace();
+    });
+
+    </script>
+</body>
+</html>
+
